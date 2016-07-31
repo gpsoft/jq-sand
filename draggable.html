@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+
+<style>
+#pictureContainer {
+    width: 200px;
+    height: 280px;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+}
+#pictureFrame {
+    width: 200px;
+    height: 280px;
+    background-image:
+        url(img/round-lt.png),
+        url(img/round-rt.png),
+        url(img/round-rb.png),
+        url(img/round-lb.png);
+    background-repeat: no-repeat;
+    background-position: left top, right top, right bottom, left bottom;
+    background-size: 90px 130px;
+    border: solid 10px #3244ff;
+    position: absolute;
+    pointer-events: none;
+    top: 0;
+    left: 0;
+}
+#thePicture {
+    cursor: grab;
+}
+#pictureControl {
+    width: 200px;
+    text-align: center;
+}
+#zoomIn,
+#zoomOut,
+#rotateLeft,
+#rotateRight {
+    cursor: pointer;
+}
+</style>
+
+    </head>
+    <body>
+        <div class="container">
+            <div id="picturePanel">
+                <div id="pictureContainer">
+                    <img id="thePicture" src="img/face.jpg" data-rotate="0" />
+                    <div id="pictureFrame">
+                    </div>
+                </div>
+                <div id="pictureControl">
+                    <p>
+                        <span id="rotateLeft" class="glyphicon glyphicon-arrow-left"></span>
+                        <span id="zoomIn" class="glyphicon glyphicon-zoom-in"></span>
+                        <span id="zoomOut" class="glyphicon glyphicon-zoom-out"></span>
+                        <span id="rotateRight" class="glyphicon glyphicon-arrow-right"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+        <script>
+            function zoom($e, ratio) {
+                $e.width($e.width()*ratio);
+                $e.height($e.height()*ratio);
+            }
+            function rotate($e, degree) {
+                var d = parseInt($e.attr('data-rotate'), 10) + degree;
+                $e.attr('data-rotate', d);
+                $e.css('transform', 'rotate('+d+'deg)');
+            }
+            $('#thePicture').draggable();
+            $('#zoomIn').bind('click', function() {
+                zoom($('#thePicture'), 1.1);
+            });
+            $('#zoomOut').bind('click', function() {
+                zoom($('#thePicture'), 0.9);
+            });
+            $('#rotateLeft').bind('click', function() {
+                rotate($('#thePicture'), -5);
+            });
+            $('#rotateRight').bind('click', function() {
+                rotate($('#thePicture'), 5);
+            });
+        </script>
+
+    </body>
+</html>
+
