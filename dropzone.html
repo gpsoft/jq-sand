@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+        <link rel="stylesheet" href="dropzone/dropzone.css">
+
+        <style>
+        </style>
+
+    </head>
+    <body>
+        <!--
+            ■基本
+            ・サイズを持たない要素(formとか空っぽのdiv)にdropzoneクラスを付ける
+            ・その要素をjQueryでセレクトして、dropzone()を呼ぶ
+            ・previewTemplateオプションにHTMLを指定すると、
+            ドロップ後の見た目を調整できる
+            ■アップロード処理
+            ・デフォルトでは、ドロップした時点でサーバへPOSTしてしまう
+            ・いやならautoProcessQueueオプションにfalseを指定し、
+            任意のタイミングでprocessQueue()を呼べばよい
+            ・このとき、form.dropzoneでマークアップしてれば、
+            form内の他の要素もPOSTされる
+            ・よりきめ細かく制御したい場合は、processQueue()ではなく
+            getAcceptedFiles()などを使いつつ、
+            自力でPOSTする
+            ・なお、これらのメソッドを呼ぶには、dropzone()内部でnewされる
+            Dropzoneオブジェクトが必要
+            ・var zone1 = $zone1[0].dropzone; で手に入るが、これはハックに近い
+            ・$('#zone1').dropzone({})の代わりに、
+            new Dropzone('#zone1', {})の方が素直
+        -->
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6" id="container1">
+                    <div class="dropzone" id="zone1"></div>
+                    <input type="hidden" name="hoge" value="fuga" />
+                    <input id="submitBtn" type="submit" value="Go upload!" />
+                </div>
+                <div class="col-sm-6" id="container2">
+                    <form id="zone2"
+                          class="dropzone"
+                          action="/dummy-app/upload2"
+                          >
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="previewTemplate" style="display:none;">
+            <div class="dz-preview dz-file-preview">
+                <div class="dz-image" style="min-width:150px;min-height:150px;">
+                    <img data-dz-thumbnail />
+                </div>
+                <div class="dz-details">
+                    <div class="dz-filename"><span data-dz-name></span></div>
+                    <div class="dz-size"><span data-dz-size></span></div>
+                </div>
+                <div class="dz-error-mark"><span>しっぱ〜い</span></div>
+                <div class="dz-error-message" style="top:90px;">
+                    <span data-dz-errormessage></span>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+        <script src="dropzone/dropzone.js"></script>
+
+        <script>
+            $(function() {
+                Dropzone.autoDiscover = false;
+                var $zone1 = $('#zone1').dropzone({
+                    url: '/dummy-app/upload',
+                    method: 'post',
+                    parallelUploads: 2, // Nリクエストまで並列実施
+                    maxFilesize: 1, // in MB.
+                    filesizeBase: 1024,
+                    paramName: 'theFile',
+                    uploadMultiple: false, // 1リクエストに複数ファイル乗せる?
+                    addRemoveLinks: true,
+                    hiddenInputContainer: '#container1',
+                    clickable: true,
+                    thumbnailHeight: 150,
+                    thumbnailWidth: 150,
+                    // ↑このサイズに収まるよう、リサイズ&トリムしてくれる。
+                    // ただし、.dz-imageのmin-widthとmin-heightも設定すべし。
+                    maxFiles: 3, // accept three files max in the zone
+                    acceptedFiles: '.jpg,.jpeg',
+                    accept: function(file, done) {
+                        if ( file.name == 'ng.jpg' ) {
+                            return done("FAILED: I don't like this file");
+                        }
+                        done();
+                    },
+                    autoProcessQueue: false,
+                    //forceFallback: true,  // emulate a browser without File API.
+                    previewTemplate: $('#previewTemplate').html(),
+                    dictDefaultMessage:
+                        'ここへドロップするか、<br/>'
+                        +'クリックしてファイルを選択。',
+                    dictFallbackMessage: '古いブラウザをお使いですね。',
+                    dictFallbackText: '↓ここからファイルを選択できます。',
+                    dictInvalidFileType: 'Jpeg形式のファイルにして。',
+                    dictFileTooBig: 'ファイルサイズが大きすぎ。',
+                    dictResponseError: 'サーバからエラーが返った。',
+                    dictCancelUpload: 'やっぱやめる',
+                    // ↑for already uploaded files
+                    dictCancelUploadConfirmation: 'マジでやめる?',
+                    dictRemoveFile: '削除',
+                    // ↑for not-yet-uploaded files
+                    dictMaxFilesExceeded: 'これ以上は無理ぽ。',
+                });
+                $('#zone2').dropzone();
+
+                var zone1 = $zone1[0].dropzone;
+
+                zone1.on('sending', function(file, xhr, formData){
+                    console.log('sending: ' + file.name);
+
+                    // append arbitrary data
+                    formData.append('csrf-token', 'a09sd7t9e7x');
+                    $('input[type=hidden]').each(function(ix, e){
+                        formData.append(e.name, e.value);
+                    });
+
+                    // you can even append files manually
+                    zone1.getRejectedFiles().forEach(function(f, ix){
+                        formData.append('rejected'+ix, f);
+                    });
+                });
+
+                $('#submitBtn').bind('click', function() {
+                    console.log(zone1.files.length + '個ドロップされた');
+                    console.log('OKなファイル:');
+                    zone1.getAcceptedFiles().forEach(function(f){
+                        console.log(f.name);
+                    });
+                    console.log('NGなファイル:');
+                    zone1.getRejectedFiles().forEach(function(f){
+                        console.log(f.name);
+                    });
+
+                    zone1.processQueue();
+                });
+            });
+
+        </script>
+
+    </body>
+</html>
+
