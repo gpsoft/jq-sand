@@ -24,6 +24,11 @@
             .item-row .item-mark {
                 width: 20px;
                 cursor: pointer;
+
+                overflow: visible!important;
+                /* ↑jQueryでアニメーションするとき、
+                   overflow:hideenが設定され、レイアウトが崩れるを回避する
+                 */
             }
             .item-row .item-controll {
                 text-align: right;
@@ -144,7 +149,6 @@
                 $('#list2').sortable({
                     axis: 'y',
                     cursor: 'move',
-                    items: 'tr',  // アイテムを認識するためのセレクタ
                     stop: function(ev, ui){
                         console.log($(this).sortable('serialize',
                                     {
@@ -156,6 +160,8 @@
                                         attribute: 'data-item-no',
                                     }).join(','));
                     },
+                    handle: '.sort-handle',
+                    items: 'tr',  // アイテムを認識するためのセレクタ
                     helper: function(ev, ui) {
                         // デフォルトではuiをclone()したものがhelperになる。
                         // それだと、width情報が失われてしまうので
@@ -168,7 +174,6 @@
                         return $helper;
                     },
                 });
-                $('#list2').disableSelection();
 
                 $('.item-mark').bind('click', function(){
                     $(this).hide('fast', function(){
