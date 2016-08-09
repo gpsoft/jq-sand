@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+
+        <style>
+            ul.sort-list li {
+                cursor: crosshair;
+            }
+
+            .item-row div {
+                display: inline-block;
+                line-height: 40px;
+            }
+            .table-bordered tbody tr.item-row {
+                padding: 0;
+            }
+            .table-bordered tbody tr.item-row td {
+                padding: 0;
+            }
+            .item-row .item-mark {
+                width: 20px;
+                cursor: pointer;
+            }
+            .item-row .item-controll {
+                text-align: right;
+            }
+            .item-row .item-controll .item-del {
+                width: 40px;
+                display: none;
+                color: #fff;
+                background-color: #f00;
+                padding-left: 4px;
+                padding-right: 4px;
+                cursor: pointer;
+            }
+            .sort-handle {
+                cursor: crosshair;
+            }
+        </style>
+
+    </head>
+    <body>
+        <!--
+            ■基本
+            ・ulやtableにsortableクラスを付ける
+            ・その要素をjQueryでセレクトして、sortable()を呼ぶ
+            ・ドラッグ中に表示されるアイテムを"helper"と呼ぶ
+            ・tableを使う場合、itemsオプションとhelperオプションが必須だと思う
+        -->
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6" id="container1">
+                    <ul id="list1" class="sort-list">
+                        <li id="item_1" class="list-group-item">1.apple</li>
+                        <li id="item_2" class="list-group-item">2.orange</li>
+                        <li id="item_3" class="list-group-item fixed">3.banana(can't be grabbed)</li>
+                        <li id="item_4" class="list-group-item">4.melon</li>
+                    </ul>
+                </div>
+                <div class="col-sm-6" id="container2">
+                    <table id="list2" class="table table-bordered">
+                        <tr data-item-no="item1" class="item-row">
+                            <td>
+                                <div class="item-mark">
+                                    <span class="glyphicon glyphicon-minus"></span>
+                                </div>
+                                <div class="item-title">
+                                    1.apple
+                                </div>
+                                <div class="item-controll pull-right">
+                                    <div class="item-del pull-right">
+                                        削除
+                                    </div>
+                                    <div class="sort-handle pull-right">
+                                        <span class="glyphicon glyphicon-sort"></span>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-item-no="item2" class="item-row">
+                            <td>
+                                <div class="item-mark">
+                                    <span class="glyphicon glyphicon-minus"></span>
+                                </div>
+                                <div class="item-title">
+                                    2.orange
+                                </div>
+                                <div class="item-controll pull-right">
+                                    <div class="item-del pull-right">
+                                        削除
+                                    </div>
+                                    <div class="sort-handle pull-right">
+                                        <span class="glyphicon glyphicon-sort"></span>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-item-no="item3" class="item-row">
+                            <td>
+                                <div class="item-mark">
+                                    <span class="glyphicon glyphicon-minus"></span>
+                                </div>
+                                <div class="item-title">
+                                    3.melon
+                                </div>
+                                <div class="item-controll pull-right">
+                                    <div class="item-del pull-right">
+                                        削除
+                                    </div>
+                                    <div class="sort-handle pull-right">
+                                        <span class="glyphicon glyphicon-sort"></span>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+        <script>
+            $(function() {
+                $('#list1').sortable({
+                    axis: 'y',          // Y軸方向にドラッグ
+                    cancel: '.fixed',   // このアイテムはソート不可
+                    cursor: 'move',
+                    scroll: true,
+                    stop: function(ev, ui){
+                        console.log('you moved ' + ui.item.text());
+                        console.log($(this).sortable('serialize', {key: 'sortedItem[]'}));
+                        alert($(this).sortable('toArray').join(','));
+                    },
+                });
+                $('#list1').disableSelection(); // ドラッグによるテキスト選択を抑止
+
+                $('#list2').sortable({
+                    axis: 'y',
+                    cursor: 'move',
+                    items: 'tr',  // アイテムを認識するためのセレクタ
+                    stop: function(ev, ui){
+                        console.log($(this).sortable('serialize',
+                                    {
+                                        attribute: 'data-item-no',
+                                        expression: /(item)(\d+)/
+                                    }));
+                        alert($(this).sortable('toArray',
+                                    {
+                                        attribute: 'data-item-no',
+                                    }).join(','));
+                    },
+                    helper: function(ev, ui) {
+                        // デフォルトではuiをclone()したものがhelperになる。
+                        // それだと、width情報が失われてしまうので
+                        // マニュアルで設定してやる。
+                        var $orgChildren = ui.children();
+                        var $helper = ui.clone();
+                        $helper.children().each(function(i, e){
+                            $(this).width($orgChildren.eq(i).width());
+                        });
+                        return $helper;
+                    },
+                });
+                $('#list2').disableSelection();
+
+                $('.item-mark').bind('click', function(){
+                    $(this).hide('fast', function(){
+                        $(this).parent().find('.item-controll .item-del').show('fast');
+                    });
+                });
+
+                $('.item-del').bind('click', function(){
+                    if ( !confirm('Are you sure?') ) {
+                        $(this).hide('fast', function(){
+                            $(this).parents('tr').find('.item-mark').show('fast');
+                        });
+                        return;
+                    }
+                    $(this).parents('tr').remove();
+                });
+            });
+
+        </script>
+
+    </body>
+</html>
+
